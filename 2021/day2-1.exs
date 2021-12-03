@@ -17,11 +17,12 @@ defmodule Submarine do
   end
 
   def calculate_position(instructions) do
-    {horizontal, depth} = File.stream!(instructions, [], :line)
-    |> Enum.reduce({0, 0}, &process_step/2)
+    {horizontal, depth} =
+      File.stream!(instructions, [], :line)
+      |> Enum.reduce({0, 0}, &process_step/2)
 
     horizontal * depth
   end
 end
 
-IO.puts Submarine.calculate_position("./inputs/day2.txt")
+IO.puts(Submarine.calculate_position("./inputs/day2.txt"))
