@@ -116,23 +116,23 @@ defmodule Bingo do
     end)
   end
 
-  defp check_each_draw([], boards, _drawn_count) do
-    boards
+  defp check_each_draw([], boards, _drawn_index) do
+    -1
   end
 
-  defp check_each_draw([drawn | remained], boards, drawn_count) when drawn_count < 4 do
+  defp check_each_draw([drawn | remained], boards, drawn_index) when drawn_index < 4 do
     board_marked = mark_drawn_on_boards(drawn, boards)
 
-    check_each_draw(remained, board_marked, drawn_count + 1)
+    check_each_draw(remained, board_marked, drawn_index + 1)
   end
 
-  defp check_each_draw([drawn | remained], boards, drawn_count) do
+  defp check_each_draw([drawn | remained], boards, drawn_index) do
     board_marked = mark_drawn_on_boards(drawn, boards)
     board_bingoed = check_bingo_on_boards(board_marked)
 
     case board_bingoed do
       nil ->
-        check_each_draw(remained, board_marked, drawn_count + 1)
+        check_each_draw(remained, board_marked, drawn_index + 1)
 
       _ ->
         IO.inspect("======= Bingo on draw number #{drawn} =======")
@@ -179,7 +179,7 @@ defmodule Bingo do
 
     board = check_each_draw(drawn, boards, 0)
 
-    if board == nil do
+    if board == -1 do
       IO.puts("No single board has a winning combination.")
     else
       IO.inspect(board)
