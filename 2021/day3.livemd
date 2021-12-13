@@ -1,5 +1,3 @@
-<!-- livebook:{"persist_outputs":true} -->
-
 # Day 3: Binary Diagnostic
 
 ## Part 1
@@ -50,15 +48,6 @@ What is the power consumption of the submarine? (Be sure to represent your answe
 
 ```elixir
 inputs = File.stream!(Path.join([__DIR__, "./inputs/day3.txt"]), [], :line)
-```
-
-```output
-%File.Stream{
-  line_or_bytes: :line,
-  modes: [:raw, :read_ahead, :binary],
-  path: "/Users/kenchen/Workspace/Projects/personal/adventofcode/2021/./inputs/day3.txt",
-  raw: true
-}
 ```
 
 ```elixir
@@ -116,10 +105,6 @@ defmodule BinaryDiagnostic1 do
 end
 
 BinaryDiagnostic1.calculate_consumption(inputs)
-```
-
-```output
-775304
 ```
 
 ## Part 2
@@ -268,8 +253,4 @@ defmodule BinaryDiagnostic2 do
 end
 
 BinaryDiagnostic2.calculate_rating(inputs)
-```
-
-```output
-1370737
 ```

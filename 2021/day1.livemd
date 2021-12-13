@@ -1,5 +1,3 @@
-<!-- livebook:{"persist_outputs":true} -->
-
 # Day 1: Sonar Sweep
 
 ## Part 1
@@ -70,15 +68,6 @@ How many measurements are larger than the previous measurement?
 inputs = File.stream!(Path.join([__DIR__, "./inputs/day1.txt"]), [], :line)
 ```
 
-```output
-%File.Stream{
-  line_or_bytes: :line,
-  modes: [:raw, :read_ahead, :binary],
-  path: "/Users/kenchen/Workspace/Projects/personal/adventofcode/2021/./inputs/day1.txt",
-  raw: true
-}
-```
-
 ```elixir
 {_last_item, count} =
   inputs
@@ -88,14 +77,6 @@ inputs = File.stream!(Path.join([__DIR__, "./inputs/day1.txt"]), [], :line)
   end)
 
 IO.puts(count)
-```
-
-```output
-1711
-```
-
-```output
-:ok
 ```
 
 ## Part 2
@@ -160,12 +141,4 @@ Consider sums of a three-measurement sliding window. How many sums are larger th
   end)
 
 IO.puts(count)
-```
-
-```output
-1743
-```
-
-```output
-:ok
 ```
