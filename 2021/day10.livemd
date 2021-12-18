@@ -142,7 +142,7 @@ Now, discard the corrupted lines. The remaining lines are incomplete.
 Incomplete lines don't have any incorrect characters - instead, they're missing some closing characters at the end of the line. 
 To repair the navigation subsystem, you just need to figure out the sequence of closing characters that complete all open chunks in the line.
 
-You can only use closing characters (), ], }, or >), and you must add them in the correct order so that only legal pairs are formed and all chunks end up closed.
+You can only use closing characters (`)`, `]`, `}`, or `>`), and you must add them in the correct order so that only legal pairs are formed and all chunks end up closed.
 
 In the example above, there are five incomplete lines:
 
@@ -175,7 +175,69 @@ The five lines' completion strings have total scores as follows:
 * )}>]}) - 5566 total points.
 * }}>}>)))) - 1480781 total points.
 * ]]}}]}]}> - 995444 total points.
-* ])}> - 294 total points.  
-  Autocomplete tools are an odd bunch: the winner is found by sorting all of the scores and then taking the middle score. (There will always be an odd number of scores to consider.) In this example, the middle score is 288957 because there are the same number of scores smaller and larger than it.
+* ])}> - 294 total points.
+
+Autocomplete tools are an odd bunch: the winner is found by sorting all of the scores and then taking the middle score. (There will always be an odd number of scores to consider.) In this example, the middle score is 288957 because there are the same number of scores smaller and larger than it.
 
 Find the completion string for each incomplete line, score the completion strings, and sort the scores. What is the middle score?
+
+```elixir
+defmodule Syntax2 do
+  @open ["[", "(", "{", "<"]
+  @close ["]", ")", "}", ">"]
+  @points %{
+    "(" => 1,
+    "[" => 2,
+    "{" => 3,
+    "<" => 4
+  }
+
+  defp step([], remained) do
+    remained
+  end
+
+  defp step([char | remained], []) do
+    idx = Enum.find_index(@open, fn c -> c == char end)
+
+    if idx == nil do
+      nil
+    else
+      step(remained, [char])
+    end
+  end
+
+  defp step([char | remained], [top | bottom] = stack) do
+    idx = Enum.find_index(@open, fn c -> c == char end)
+
+    cond do
+      idx != nil ->
+        step(remained, [char | stack])
+
+      true ->
+        close_idx = Enum.find_index(@close, fn c -> c == char end)
+        if top == Enum.at(@open, close_idx), do: step(remained, bottom), else: nil
+    end
+  end
+
+  defp calculate_points([], point) do
+    point
+  end
+
+  defp calculate_points([top | bottom], point) do
+    calculate_points(bottom, point * 5 + @points[top])
+  end
+
+  def first_incomplete(lines) do
+    points =
+      lines
+      |> Enum.map(&step(&1, []))
+      |> Enum.reject(fn i -> i == nil end)
+      |> Enum.map(&calculate_points(&1, 0))
+      |> Enum.sort()
+
+    Enum.at(points, floor(length(points) / 2))
+  end
+end
+
+Syntax2.first_incomplete(lines)
+```
