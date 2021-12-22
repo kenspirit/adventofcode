@@ -488,3 +488,109 @@ After step 195:
 
 If you can calculate the exact moments when the octopuses will all flash simultaneously, you should be able to navigate through the cavern. 
 What is the first step during which all octopuses flash?
+
+```elixir
+defmodule Octopus2 do
+  # defp print_grid(grid, label) do
+  #   IO.puts(label)
+
+  #   Map.to_list(grid)
+  #   |> Enum.sort_by(fn {{x, y}, digit} -> {x, y} end, &<=/2)
+  #   |> Enum.group_by(fn {{x, _y}, _} -> x end, fn {_, digit} -> digit end)
+  #   |> IO.inspect(limit: :infinity)
+  # end
+
+  defp flash_neighbor(grid, coordinate, flashed_octopus) do
+    octopus = Map.get(grid, coordinate)
+
+    cond do
+      MapSet.member?(flashed_octopus, coordinate) ->
+        grid
+
+      octopus in [nil, 0] ->
+        grid
+
+      true ->
+        Map.replace(grid, coordinate, octopus + 1)
+    end
+  end
+
+  defp flash_neighbors(grid, coordinates, {x, y} = coordinate, flashed_octopus, count) do
+    flashed_octopus = MapSet.put(flashed_octopus, coordinate)
+
+    grid =
+      grid
+      |> Map.put(coordinate, 0)
+      |> flash_neighbor({x - 1, y - 1}, flashed_octopus)
+      |> flash_neighbor({x, y - 1}, flashed_octopus)
+      |> flash_neighbor({x + 1, y - 1}, flashed_octopus)
+      |> flash_neighbor({x - 1, y}, flashed_octopus)
+      |> flash_neighbor({x + 1, y}, flashed_octopus)
+      |> flash_neighbor({x - 1, y + 1}, flashed_octopus)
+      |> flash_neighbor({x, y + 1}, flashed_octopus)
+      |> flash_neighbor({x + 1, y + 1}, flashed_octopus)
+
+    flash(grid, coordinates, flashed_octopus, count + 1)
+  end
+
+  defp flash(grid, coordinates, flashed_octopus, pre_flashed_count) do
+    {grid, flashed_count} =
+      Enum.reduce(coordinates, {grid, 0}, fn coordinate, {acc, count} ->
+        octopus = Map.get(acc, coordinate)
+
+        cond do
+          octopus > 9 ->
+            flash_neighbors(acc, coordinates, coordinate, flashed_octopus, count)
+
+          true ->
+            {acc, count}
+        end
+      end)
+
+    case flashed_count do
+      0 ->
+        {grid, pre_flashed_count}
+
+      _ ->
+        flash(grid, coordinates, flashed_octopus, pre_flashed_count + flashed_count)
+    end
+  end
+
+  defp step(_grid, _coordinates, step, pre_flashed_count) when step == 0 do
+    pre_flashed_count
+  end
+
+  defp step(grid, coordinates, step, pre_flashed_count) do
+    octopus_sum =
+      grid
+      |> Map.values()
+      |> Enum.sum()
+
+    if octopus_sum == 0 do
+      step - 1
+    else
+      grid =
+        Enum.reduce(coordinates, grid, fn coordinate, acc ->
+          Map.update!(acc, coordinate, &(&1 + 1))
+        end)
+
+      {grid, flashed_count} = flash(grid, coordinates, MapSet.new(), pre_flashed_count)
+
+      step(grid, coordinates, step + 1, flashed_count)
+    end
+  end
+
+  def step_of_all_flash(inputs) do
+    grid =
+      for {line, row} <- inputs |> String.split("\n", trim: true) |> Enum.with_index(),
+          {digit, col} <- line |> String.to_charlist() |> Enum.with_index(),
+          into: %{} do
+        {{row, col}, digit - ?0}
+      end
+
+    step(grid, Map.keys(grid), 1, 0)
+  end
+end
+
+Octopus2.step_of_all_flash(inputs)
+```
