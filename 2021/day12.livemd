@@ -264,3 +264,135 @@ end
 
 PassagePathing.find_paths(inputs) |> MapSet.size()
 ```
+
+## Part 2
+
+After reviewing the available paths, you realize you might have time to visit a single small cave twice. Specifically, big caves can be visited any number of times, a single small cave can be visited at most twice, and the remaining small caves can be visited at most once. However, the caves named start and end can only be visited exactly once each: once you leave the start cave, you may not return to it, and once you reach the end cave, the path must end immediately.
+
+Now, the 36 possible paths through the first example above are:
+
+```
+start,A,b,A,b,A,c,A,end
+start,A,b,A,b,A,end
+start,A,b,A,b,end
+start,A,b,A,c,A,b,A,end
+start,A,b,A,c,A,b,end
+start,A,b,A,c,A,c,A,end
+start,A,b,A,c,A,end
+start,A,b,A,end
+start,A,b,d,b,A,c,A,end
+start,A,b,d,b,A,end
+start,A,b,d,b,end
+start,A,b,end
+start,A,c,A,b,A,b,A,end
+start,A,c,A,b,A,b,end
+start,A,c,A,b,A,c,A,end
+start,A,c,A,b,A,end
+start,A,c,A,b,d,b,A,end
+start,A,c,A,b,d,b,end
+start,A,c,A,b,end
+start,A,c,A,c,A,b,A,end
+start,A,c,A,c,A,b,end
+start,A,c,A,c,A,end
+start,A,c,A,end
+start,A,end
+start,b,A,b,A,c,A,end
+start,b,A,b,A,end
+start,b,A,b,end
+start,b,A,c,A,b,A,end
+start,b,A,c,A,b,end
+start,b,A,c,A,c,A,end
+start,b,A,c,A,end
+start,b,A,end
+start,b,d,b,A,c,A,end
+start,b,d,b,A,end
+start,b,d,b,end
+start,b,end
+```
+
+The slightly larger example above now has 103 paths through it, and the even larger example now has 3509 paths through it.
+
+Given these new rules, how many paths through this cave system are there?
+
+```elixir
+defmodule PassagePathing2 do
+  defp small_cave?(point) do
+    [char | _] = String.to_charlist(point)
+    char >= ?a
+  end
+
+  defp can_not_visit_again?(current_path, point) do
+    current_path
+    |> Enum.filter(&small_cave?/1)
+    |> Enum.frequencies()
+    |> Map.values()
+    |> Enum.any?(&(&1 >= 2)) and point in current_path
+  end
+
+  defp find_paths(_segments, from, found_paths, current_path, _depth) when from == "end" do
+    full_path = [from | current_path]
+
+    if MapSet.member?(found_paths, full_path) do
+      found_paths
+    else
+      MapSet.put(found_paths, full_path)
+    end
+  end
+
+  defp find_paths(segments, from, found_paths, current_path, depth) do
+    if small_cave?(from) and can_not_visit_again?(current_path, from) do
+      # IO.puts("-- visited #{from} again in #{Enum.join(current_path, ",")} --")
+      found_paths
+    else
+      next_points = Map.get(segments, from)
+
+      if next_points == nil do
+        [last | _] = current_path
+        # IO.puts("Back to '#{last}':  #{Enum.join([from | current_path], ",")}")
+        find_paths(segments, last, found_paths, [from | current_path], depth + 1)
+      else
+        # IO.puts("Start [#{Enum.join(current_path, ",")}] with '#{from}':  next #{Enum.join(next_points, ",")}")
+
+        Enum.reduce(next_points, found_paths, fn next_point, acc ->
+          find_paths(segments, next_point, acc, [from | current_path], depth + 1)
+        end)
+      end
+    end
+  end
+
+  defp add_segments(segments, from, to) when from == "start" do
+    add_segment(segments, from, to)
+  end
+
+  defp add_segments(segments, from, to) when to == "end" do
+    add_segment(segments, from, to)
+  end
+
+  defp add_segments(segments, from, to) do
+    add_segment(segments, from, to)
+    |> add_segment(to, from)
+  end
+
+  defp add_segment(segments, from, to) do
+    Map.update(segments, from, [to], fn existing -> [to | existing] end)
+  end
+
+  def find_paths(inputs) do
+    segments =
+      inputs
+      |> String.split("\n", trim: true)
+      |> Enum.reduce(%{}, fn path, acc ->
+        [from, to] = String.split(path, "-")
+
+        add_segments(acc, from, to)
+      end)
+
+    # |> tap(&IO.inspect/1)
+
+    find_paths(segments, "start", MapSet.new(), [], 0)
+  end
+end
+
+PassagePathing2.find_paths(inputs)
+|> MapSet.size()
+```
