@@ -152,29 +152,24 @@ fold_ins = Enum.reverse(fold_ins)
 
 ```elixir
 defmodule TransparentOrigami do
-  defp fold_by({x, 0}, dots) do
+  defp fold_by({fold, 0}, dots) do
     dots
-    |> Enum.map(fn {x1, y1} ->
-      cond do
-        x1 >= x ->
-          {x1 - x, y1}
+    |> Enum.map(fn {x, y} ->
+      # cond do
+      #   x1 >= x ->
+      #     {x1 - x, y1}
 
-        true ->
-          {x - x1, y1}
-      end
+      #   true ->
+      #     {x - x1, y1}
+      # end
+      {fold - abs(x - fold), y}
     end)
   end
 
-  defp fold_by({0, y}, dots) do
+  defp fold_by({0, fold}, dots) do
     dots
-    |> Enum.map(fn {x1, y1} ->
-      cond do
-        y1 >= y ->
-          {x1, y1 - y}
-
-        true ->
-          {x1, y1}
-      end
+    |> Enum.map(fn {x, y} ->
+      {x, fold - abs(y - fold)}
     end)
   end
 
@@ -185,12 +180,48 @@ defmodule TransparentOrigami do
   def fold(dots, [fold_ins | others]) do
     fold_by(fold_ins, dots)
     |> fold(others)
-    # |> tap(&IO.inspect/1)
-    |> Enum.frequencies()
-    |> Map.keys()
-    |> length()
+    |> Enum.uniq()
+    |> Enum.sort()
   end
 end
 
-TransparentOrigami.fold(dots, [Enum.at(fold_ins, 0)])
+TransparentOrigami.fold(dots, Enum.take(fold_ins, 1))
+|> tap(&IO.inspect(&1, limit: :infinity))
+|> length()
+```
+
+## Part 2
+
+Finish folding the transparent paper according to the instructions. The manual says the code is always eight capital letters.
+
+What code do you use to activate the infrared thermal imaging camera system?
+
+```elixir
+dots = TransparentOrigami.fold(dots, fold_ins)
+# |> tap(&IO.inspect(&1, limit: :infinity))
+
+[{max_x, _}] = Enum.take(dots, -1)
+{_, max_y} = Enum.max_by(dots, fn {_x, y} -> y end)
+
+{max_x, max_y}
+
+dots_map = Enum.group_by(dots, fn {_x, y} -> y end, fn {x, _y} -> x end)
+
+Enum.map(0..max_y, fn y ->
+  points = Map.get(dots_map, y)
+
+  Enum.map(0..max_x, fn x ->
+    cond do
+      # Integer.mod(x, 11) == 0 ->
+      #   "  "
+      points != nil and x in points ->
+        "#"
+
+      true ->
+        "."
+    end
+  end)
+  |> Enum.join("")
+end)
+|> Enum.each(&IO.puts/1)
 ```
